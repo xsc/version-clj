@@ -2,29 +2,48 @@
       :author "Yannick Scherer"}
   version-clj.split)
 
-;; ## Concept
+;; ## Desired Results
 ;;
-;; By using a set of prioritized splitting points, we can create a vector representation
-;; of a version string. For example, the version `"1.1-0-1.2-SNAPSHOT"` might result in:
-;;
-;; - `[1 [1 0 1] [2 "SNAPSHOT"]]`
-;; - `[[1 1] 0 [1 2] "SNAPSHOT"]`
-;;
-;; depending on whether "." has a higher priority than "-" or not.
+;; "1.0"                -> ((1 0))
+;; "1"                  -> ((1))
+;; "1.0-SNAPSHOT"       -> ((1 0) ("SNAPSHOT"))
+;; "1-SNAPSHOT"         -> ((1) ("SNAPSHOT"))
+;; "1.0-1-0.2-alpha2"   -> ((1 (0 1 0) 2) ("alpha" 2))
 
-;; ## Utility
+;; ## Normalization
+;;
+;; - Convert Strings to Integer
+;; - Replace one-element seqs with its element
 
-(defn- normalize-version-seq
-  "Convert elements of a version seq to integers if possible."
-  [v]
-  (map
-    (fn [x]
-      (cond (string? x) (try
-                          (Integer/parseInt ^String x)
-                          (catch Exception _ x))
-            (integer? x) x
-            :else (normalize-version-seq x)))
-    v))
+(defmulti normalize-element
+  "Normalize an Element by class."
+  class 
+  :default nil)
+
+(defmethod normalize-element java.lang.String 
+  [x]
+  (try (Integer/parseInt x) (catch Exception _ x)))
+
+(defmethod normalize-element clojure.lang.ISeq
+  [x]
+  (let [r (map normalize-element x)]
+    (if (= (count r) 1)
+      (first r)
+      r)))
+
+(defmethod normalize-element clojure.lang.IPersistentVector 
+  [x]
+  (normalize-element (seq x)))
+
+(defmethod normalize-element nil 
+  [x] 
+  x)
+
+(defn normalize-version-seq
+  "Normalize a version seq, creating a seq again."
+  [x]
+  (let [r (normalize-element x)]
+    (if (seq? r) r (vector r))))
 
 ;; ## Split Points
 
@@ -42,29 +61,15 @@
   (split [f s]
     (f s)))
 
-;; ## Splitting Algorithm
+;; ## Predefined Split Points
 
-(defn- split-at-points
-  "Split version string at the given split points."
-  [split-points ^String s]
-  (if-not (seq split-points) s
-    (let [[c & rst] split-points
-          parts (split c s)]
-      (if (= (count parts) 1)
-        s
-        (map (partial split-at-points rst) parts)))))
+(def ^:const SPLIT-DOT  
+  "Split at `.` character."
+  "\\.")
 
-(defn version-split
-  "Split Version String using the given split points, normalize result."
-  [split-points ^String s]
-  (let [v (split-at-points split-points s)
-        v (if (string? v) [v] v)]
-    (normalize-version-seq v)))
-
-;; ## Split Points
-
-(def ^:const SPLIT-DOT  "\\.")
-(def ^:const SPLIT-DASH "-")
+(def ^:const SPLIT-DASH 
+  "Split at `-` character."
+  "-")
 
 (defn SPLIT-COMPOUND
   "Split a given string into char-only and int-only parts."
@@ -79,3 +84,55 @@
             rest-part (.substring v (count first-part))]
         (recur rest-part (conj result first-part)))
       result)))
+
+;; ## Splitting Algorithm
+;;
+;; We employ a special treatment of the first element of the last split vector.
+;; 
+;;    "1.0-1-0.1-SNAPSHOT" 
+;;    -> ("1" "0-1-0" "1-SNAPSHOT")              # split using first split point
+;;    -> (("1" "0-1-0") "1-SNAPSHOT")            # group into version/rest
+;;    -> (("1" ("0" "1" "0")) ("1" "SNAPSHOT"))  # split using other split points
+;;    -> (("1" ("0" "1" "0") "1") ("SNAPSHOT"))  # merge first of rest into version
+;;    -> ((1 (0 1 0) 1) ("SNAPSHOT"))            # normalize
+;;
+
+(defn- first-split-at-point 
+  "Split using first split point. Creates a two-element consisting of the parts."
+  [first-split-point ^String s]
+  (let [parts (split first-split-point s)]
+    (if (= (count parts) 1) 
+      (vector nil s)
+      (vector (butlast parts) (last parts)))))
+
+(defn- rest-split-at-points
+  "Split version string recursively at the given split points."
+  [split-points ^String s]
+  (if-not (seq split-points)
+    [s]
+    (filter 
+      (complement empty?) 
+      (let [[p & rst] split-points
+            parts (split p s)]
+        (if (= (count parts) 1)
+          (rest-split-at-points rst s)
+          (map #(rest-split-at-points rst %) parts))))))
+
+(defn version-split
+  "Split version string using the given split points, creating a two-element vector
+   representing a version/qualifiers pair."
+  ([^String s] (version-split [SPLIT-DOT SPLIT-DASH SPLIT-COMPOUND] s))
+  ([split-points ^String s]
+   (if-not (seq split-points)
+     (vector s)
+     (let [[p & rst] split-points
+           [v0 v1] (first-split-at-point p s)
+           r0 (map #(rest-split-at-points rst %) v0)
+           r1 (rest-split-at-points rst v1)]
+       (if-let [p (first r1)]
+         (let [r0 (normalize-version-seq (concat r0 [p]))
+               r1 (normalize-version-seq (rest r1))]
+           (if (seq r1)
+             (vector r0 r1)
+             (vector r0)))
+         (vector (normalize-version-seq r0)))))))
