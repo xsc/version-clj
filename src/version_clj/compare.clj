@@ -1,7 +1,7 @@
 (ns ^{ :doc "Version Seq Comparison"
        :author "Yannick Scherer" }
   version-clj.compare
-  (:use [version-clj.split :only [version-split]]))
+  (:use [version-clj.split :only [version->seq]]))
 
 ;; ## Concept
 ;;
@@ -89,17 +89,17 @@
 
 ;; ## Wrappers
 
-(defn version-compare
-  "Compare two version vectors."
+(defn version-seq-compare
+  "Compare two version seqs."
   [v0 v1]
   (let [r (version-element-compare v0 v1)]
     (cond (pos? r) 1
           (neg? r) -1
           :else 0)))
 
-(defn version-string-compare
+(defn version-compare
   "Compare two Strings, using the default versioning scheme."
   [s0 s1]
-  (version-compare
-    (version-split s0)
-    (version-split s1)))
+  (version-seq-compare
+    (version->seq s0)
+    (version->seq s1)))

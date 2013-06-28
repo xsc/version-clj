@@ -4,7 +4,7 @@
 
 (tabular
   (fact "about version comparison"
-    (version-string-compare ?v0 ?v1) => ?r)
+    (version-compare ?v0 ?v1) => ?r)
   ?v0              ?v1               ?r
   ;; Numeric Comparison
   "1.0.0"          "1.0.0"           0

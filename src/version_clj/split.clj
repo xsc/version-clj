@@ -121,10 +121,10 @@
           (rest-split-at-points rst s)
           (map #(rest-split-at-points rst %) parts))))))
 
-(defn version-split
+(defn version->seq
   "Split version string using the given split points, creating a two-element vector
    representing a version/qualifiers pair."
-  ([^String s] (version-split [SPLIT-DOT SPLIT-DASH SPLIT-COMPOUND] s))
+  ([^String s] (version->seq [SPLIT-DOT SPLIT-DASH SPLIT-COMPOUND] s))
   ([split-points ^String s]
    (if-not (seq split-points)
      (vector s)

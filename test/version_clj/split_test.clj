@@ -4,7 +4,7 @@
 
 (tabular
   (fact "about version vector creation"
-    (version-split ?version) => ?v)
+    (version->seq ?version) => ?v)
   ?version         ?v
   "1.0.0"          [[1 0 0]]
   "1.0"            [[1 0]]
