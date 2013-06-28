@@ -39,7 +39,7 @@ __REPL__
 ## Version Sequence Creation
 
 A version seq is a pair of version-information and qualifier-information. In general, a version string is split using
-dots (`.`) and (`dashes`), but it is assumed that the last result of the dot-split represents qualifiers (except for its 
+dots (`.`) and dashes (`-`), but it is assumed that the last result of the dot-split represents qualifiers (except for its 
 first element which is put into the version data seq). For example, the algorithm might produce the following steps:
 
 ```clojure
@@ -54,6 +54,16 @@ first element which is put into the version data seq). For example, the algorith
 ```
 
 This should create results that represent an intuitive reading of version numbers.
+
+## Version Comparison
+
+Version seqs are compared by extending them to the same length (using zero/nil) followed by an element-wise
+comparison.
+
+- Integers are compared numerically.
+- Strings are compared using a table of well-known qualifiers or lexicographically.
+- Subsequences are compared like they represent versions of their own.
+- An integer is newer than a string.
 
 ## License
 
