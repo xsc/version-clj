@@ -21,8 +21,11 @@
   :default nil)
 
 (defmethod normalize-element java.lang.String 
-  [x]
-  (try (Integer/parseInt x) (catch Exception _ x)))
+  [^String x]
+  (try 
+    (Integer/parseInt x) 
+    (catch Exception _ 
+      (.toLowerCase x))))
 
 (defmethod normalize-element clojure.lang.ISeq
   [x]
