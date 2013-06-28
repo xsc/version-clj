@@ -5,6 +5,9 @@ __version-clj__ is a Clojure library for analysis and comparison of artifact ver
 [![Build Status](https://travis-ci.org/xsc/version-clj.png?branch=master)](https://travis-ci.org/xsc/version-clj)
 [![endorse](https://api.coderwall.com/xsc/endorsecount.png)](https://coderwall.com/xsc)
 
+It originated as a comparison mechanism in [lein-ancient](https://github.com/xsc/lein-ancient), a plugin to detect
+outdated dependencies in your packages.
+
 ## Usage
 
 __Leiningen__ ([via Clojars](https://clojars.org/version-clj))
