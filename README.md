@@ -62,8 +62,21 @@ comparison.
 
 - Integers are compared numerically.
 - Strings are compared using a table of well-known qualifiers or lexicographically.
+- A well-known qualifier is newer than an unknown one.
 - Subsequences are compared like they represent versions of their own.
 - An integer is newer than a string.
+
+The order of well-known qualifiers is given as:
+
+- `alpha` == `a`
+- < `beta` == `b`
+- < `milestone` == `m`
+- < `rc` == `cr`
+- < `snapshot`
+- < `final` == `stable` == the empty string/nil
+
+Have a look at the [respective unit tests](https://github.com/xsc/version-clj/blob/master/test/version_clj/compare_test.clj)
+to see the comparison mechanism in action.
 
 ## License
 
