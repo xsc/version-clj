@@ -66,14 +66,16 @@ comparison.
 - Subsequences are compared like they represent versions of their own.
 - An integer is newer than a string.
 
-The order of well-known qualifiers is given as:
+The order of well-known qualifiers is case-insensitive and given as:
 
-- `alpha` == `a`
-- < `beta` == `b`
-- < `milestone` == `m`
-- < `rc` == `cr`
-- < `snapshot`
-- < `final` == `stable` == the empty string/nil
+```
+  "alpha"     == "a"
+< "beta"      == "b"
+< "milestone" == "m"
+< "rc"        == "cr"
+< "snapshot"
+< "final"     == "stable" == ""
+```
 
 Have a look at the [respective unit tests](https://github.com/xsc/version-clj/blob/master/test/version_clj/compare_test.clj)
 to see the comparison mechanism in action.
