@@ -101,7 +101,8 @@
 ;;
 
 (defn- first-split-at-point 
-  "Split using first split point. Creates a two-element consisting of the parts."
+  "Split using first split point. Creates a two-element vector consisting of the parts.
+   The result should be interpreted as a version/qualifier data pair."
   [first-split-point ^String s]
   (let [parts (split first-split-point s)]
     (if (= (count parts) 1) 

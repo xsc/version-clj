@@ -16,3 +16,13 @@
 (def version-compare 
   "Compare two version strings."
   c/version-compare)
+
+(defn version-sort
+  "Sort a seq of version strings."
+  [versions]
+  (sort version-compare versions))
+
+(defn version-seq-sort
+  "Sort a seq of version seqs."
+  [version-seqs]
+  (sort version-seq-compare version-seqs))
