@@ -68,7 +68,7 @@ comparison.
 
 The order of well-known qualifiers is case-insensitive and given as:
 
-```
+```clojure
   "alpha"     == "a"
 < "beta"      == "b"
 < "milestone" == "m"
