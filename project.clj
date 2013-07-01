@@ -1,4 +1,4 @@
-(defproject version-clj "0.1.0-SNAPSHOT"
+(defproject version-clj "0.1.0"
   :description "Version Number Analysis and Comparison for Clojure"
   :url "https://github.com/xsc/version-clj"
   :license {:name "Eclipse Public License"

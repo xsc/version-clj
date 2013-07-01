@@ -15,7 +15,7 @@ __Leiningen__ ([via Clojars](https://clojars.org/version-clj))
 Put the following into the `:dependencies` vector of your `project.clj`.
 
 ```clojure
-[version-clj "0.1.0-SNAPSHOT"]
+[version-clj "0.1.0"]
 ```
 
 __REPL__
