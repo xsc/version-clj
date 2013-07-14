@@ -48,9 +48,9 @@ first element which is put into the version data seq). For example, the algorith
 => (("9" "1-0-1") ("1-alpha4"))                            ;; group into version/qualifier data
 => ((("9") ("1" "0" "1")) (("1" "alpha4")))                ;; split by dashes
 => (((("9")) (("1") ("0") ("1"))) ((("1") ("alpha" "4")))) ;; split by letter/integer changes
-=> ((9 (1 0 1)) (1 ("alpha" 4)))                           ;; normalize
-=> ((9 (1 0 1) 1) (("alpha" 4)))                           ;; rearrange remaining version data
-=> ((9 (1 0 1) 1) ("alpha" 4))                             ;; normalize qualifiers again
+=> [(9 (1 0 1)) (1 ("alpha" 4))]                           ;; normalize
+=> [(9 (1 0 1) 1) (("alpha" 4))]                           ;; rearrange remaining version data
+=> [(9 (1 0 1) 1) ("alpha" 4)]                             ;; normalize qualifiers again
 ```
 
 This should create results that represent an intuitive reading of version numbers.
