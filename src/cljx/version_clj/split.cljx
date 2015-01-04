@@ -1,6 +1,4 @@
-(ns ^{:doc "Splitting a Version String"
-      :author "Yannick Scherer"}
-  version-clj.split)
+(ns version-clj.split)
 
 ;; ## Desired Results
 ;;
@@ -17,14 +15,14 @@
 
 (defmulti normalize-element
   "Normalize an Element by class."
-  class 
+  class
   :default nil)
 
-(defmethod normalize-element java.lang.String 
+(defmethod normalize-element java.lang.String
   [^String x]
-  (try 
-    (Integer/parseInt x) 
-    (catch Exception _ 
+  (try
+    (Integer/parseInt x)
+    (catch Exception _
       (.toLowerCase x))))
 
 (defmethod normalize-element clojure.lang.ISeq
@@ -34,12 +32,12 @@
       (first r)
       r)))
 
-(defmethod normalize-element clojure.lang.IPersistentVector 
+(defmethod normalize-element clojure.lang.IPersistentVector
   [x]
   (normalize-element (seq x)))
 
-(defmethod normalize-element nil 
-  [x] 
+(defmethod normalize-element nil
+  [x]
   x)
 
 (defn normalize-version-seq
@@ -66,11 +64,11 @@
 
 ;; ## Predefined Split Points
 
-(def ^:const SPLIT-DOT  
+(def ^:const SPLIT-DOT
   "Split at `.` character."
   "\\.")
 
-(def ^:const SPLIT-DASH 
+(def ^:const SPLIT-DASH
   "Split at `-` character."
   "-")
 
@@ -91,8 +89,8 @@
 ;; ## Splitting Algorithm
 ;;
 ;; We employ a special treatment of the first element of the last split vector.
-;; 
-;;    "1.0-1-0.1-SNAPSHOT" 
+;;
+;;    "1.0-1-0.1-SNAPSHOT"
 ;;    -> ("1" "0-1-0" "1-SNAPSHOT")              # split using first split point
 ;;    -> (("1" "0-1-0") "1-SNAPSHOT")            # group into version/rest
 ;;    -> (("1" ("0" "1" "0")) ("1" "SNAPSHOT"))  # split using other split points
@@ -100,12 +98,12 @@
 ;;    -> ((1 (0 1 0) 1) ("SNAPSHOT"))            # normalize
 ;;
 
-(defn- first-split-at-point 
+(defn- first-split-at-point
   "Split using first split point. Creates a two-element vector consisting of the parts.
    The result should be interpreted as a version/qualifier data pair."
   [first-split-point ^String s]
   (let [parts (split first-split-point s)]
-    (if (= (count parts) 1) 
+    (if (= (count parts) 1)
       (vector nil s)
       (vector (butlast parts) (last parts)))))
 
@@ -114,8 +112,8 @@
   [split-points ^String s]
   (if-not (seq split-points)
     [s]
-    (filter 
-      (complement empty?) 
+    (filter
+      (complement empty?)
       (let [[p & rst] split-points
             parts (split p s)]
         (if (= (count parts) 1)

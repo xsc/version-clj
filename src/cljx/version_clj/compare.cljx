@@ -9,7 +9,7 @@
 ;; zeros at the end if vectors have different lengths.
 ;;
 ;; Identical:
-;; 
+;;
 ;; - `[(1 0) ("SNAPSHOT")]`
 ;; - `[(1 0 0) ("SNAPSHOT")]`
 ;;
@@ -27,7 +27,7 @@
             (cond (integer? x) :int
                   (string? x) :str
                   (nil? x) :nil
-                  :else :lst))] 
+                  :else :lst))]
     (fn [e0 e1]
       (vector (f e0) (f e1)))))
 
