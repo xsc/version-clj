@@ -1,6 +1,7 @@
 (ns version-clj.core-test
-  (:require [clojure.test :refer :all]
-            [version-clj.core :refer :all]))
+  (:require #+clj [clojure.test :refer [deftest are]]
+            #+cljs [cemerick.cljs.test :refer-macros [deftest are]]
+            [version-clj.core :refer [snapshot? qualified?]]))
 
 (deftest t-snapshot
   (are [v r] (= (boolean (snapshot? v)) r)

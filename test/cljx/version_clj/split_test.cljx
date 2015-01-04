@@ -1,6 +1,7 @@
 (ns version-clj.split-test
-  (:require [clojure.test :refer :all]
-            [version-clj.split :refer :all]))
+  (:require #+clj [clojure.test :refer [deftest are]]
+            #+cljs [cemerick.cljs.test :refer-macros [deftest are]]
+            [version-clj.split :refer [version->seq]]))
 
 (deftest t-split
   (are [version v] (= (version->seq version) v)

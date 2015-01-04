@@ -7,10 +7,16 @@
   :source-paths ["src/cljx"]
   :test-paths ["target/test-classes"]
 
-  :profiles {:dev {:dependencies [[com.cemerick/clojurescript.test "0.3.3"]]
-                   :plugins [[org.clojure/clojurescript "0.0-2665"]
+  :profiles {:dev {:plugins [[org.clojure/clojurescript "0.0-2665"]
+                             [com.cemerick/clojurescript.test "0.3.3"]
                              [com.keminglabs/cljx "0.5.0"]
-                             [lein-cljsbuild "1.0.4"]]}}
+                             [lein-cljsbuild "1.0.4"]]}
+             :cljs {:dependencies [[org.clojure/clojurescript "0.0-2665"]]}}
+
+  :cljsbuild {:test-commands {"node" ["node" :node-runner "target/testable.js"]}
+              :builds [{:source-paths ["target/classes" "target/test-classes"]
+                        :compiler {:output-to "target/testable.js"
+                                   :optimizations :simple}}]}
 
   :prep-tasks [["cljx" "once"]]
   :cljx {:builds [{:source-paths ["src/cljx"]
@@ -25,4 +31,7 @@
                   {:source-paths ["test/cljx"]
                    :output-path "target/test-classes"
                    :rules :cljs}]}
-  :jar-exclusions [#"\.cljx"])
+  :jar-exclusions [#"\.cljx"]
+  :aliases {"cljs-test" ["with-profile" "+cljs" "do" "clean,"
+                         "cljx" "once," "cljsbuild" "test"]}
+  :pedantic? :abort)

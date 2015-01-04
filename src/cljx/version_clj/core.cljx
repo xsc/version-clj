@@ -1,21 +1,19 @@
-(ns ^{:doc "Core Namespace"
-      :author "Yannick Scherer"}
-  version-clj.core
+(ns version-clj.core
   (:require [version-clj.split :as sp]
             [version-clj.compare :as c]))
 
 ;; ## Facade
 
 (def version->seq
-  "Convert version string to version seq (a pair of version/qualifiers) by 
+  "Convert version string to version seq (a pair of version/qualifiers) by
    using `.`, `-` and integer/letter changes to detect version parts."
   sp/version->seq)
 
-(def version-seq-compare 
+(def version-seq-compare
   "Compare two version seqs."
   c/version-seq-compare)
 
-(def version-compare 
+(def version-compare
   "Compare two version strings."
   c/version-compare)
 
@@ -33,43 +31,42 @@
 
 ;; ## Analysis
 
-(defmacro ^:private def-vfn
-  "Create Function that automatically converts strings to version seqs and passes them to the given 
-   function."
-  [id docstring f]
-  `(def ~id ~docstring
-     (let [f# ~f]
-       (fn [v#]
-         (if (string? v#)
-           (f# (version->seq v#))
-           (f# v#))))))
+(defn- to-version-seq
+  [v]
+  (if (string? v)
+    (version->seq v)
+    (seq v)))
 
-(def-vfn version-data 
+(defn version-data
   "Get version data from version seq."
-  first)
+  [v]
+  (first (to-version-seq v)))
 
-(def-vfn qualifier-data
+(defn qualifier-data
   "Get qualifier data from version seq."
-  second)
+  [v]
+  (second (to-version-seq v)))
 
-(def-vfn snapshot?
+(defn snapshot?
   "Check if the given version (string or seq) represents a SNAPSHOT."
-  (fn [v]
-    (some 
-      (fn [x]
-        (cond (integer? x) false
-              (string? x) (= x "snapshot")
-              :else (snapshot? x)))
-      v)))
+  [v]
+  (some
+    (fn [x]
+      (cond (integer? x) false
+            (string? x) (= x "snapshot")
+            :else (snapshot? x)))
+    (to-version-seq v)))
 
 (def qualified?
   "Check if the given version (string or seq) represents a qualified version."
   (letfn [(check-seq [sq]
-            (some 
+            (some
               (fn [x]
                 (cond (integer? x) false
                       (string? x) true
                       :else (check-seq x)))
               sq))]
     (fn [v]
-      (or (snapshot? v) (check-seq (qualifier-data v))))))
+      (let [v' (to-version-seq v)]
+        (or (snapshot? v')
+            (check-seq (qualifier-data v')))))))

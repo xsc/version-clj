@@ -1,4 +1,5 @@
-(ns version-clj.split)
+(ns version-clj.split
+  (:require [clojure.string :as string]))
 
 ;; ## Desired Results
 ;;
@@ -15,24 +16,28 @@
 
 (defmulti normalize-element
   "Normalize an Element by class."
-  class
+  (fn [v]
+    (cond (string? v) :string
+          (vector? v) :vector
+          (seq? v) :seq))
   :default nil)
 
-(defmethod normalize-element java.lang.String
-  [^String x]
-  (try
-    (Integer/parseInt x)
-    (catch Exception _
-      (.toLowerCase x))))
+(defmethod normalize-element :string
+  [#+clj ^String x
+   #+cljs ^js/String x]
+  (if (re-matches #"\d+" x)
+    #+clj (Integer/parseInt x)
+    #+cljs (js/parseInt x)
+    (.toLowerCase x)))
 
-(defmethod normalize-element clojure.lang.ISeq
+(defmethod normalize-element :seq
   [x]
   (let [r (map normalize-element x)]
     (if (= (count r) 1)
       (first r)
       r)))
 
-(defmethod normalize-element clojure.lang.IPersistentVector
+(defmethod normalize-element :vector
   [x]
   (normalize-element (seq x)))
 
@@ -48,43 +53,36 @@
 
 ;; ## Split Points
 
-(defprotocol SplitPoint
-  "Protocol for Split Points."
-  (split [this ^String s]))
-
-(extend-type java.lang.String
-  SplitPoint
-  (split [this s]
-    (.split ^String s this)))
-
-(extend-type clojure.lang.AFunction
-  SplitPoint
-  (split [f s]
-    (f s)))
+(defn- split
+  [v s]
+  (if (fn? v)
+    (v s)
+    (string/split s v)))
 
 ;; ## Predefined Split Points
 
 (def ^:const SPLIT-DOT
   "Split at `.` character."
-  "\\.")
+  #"\.")
 
 (def ^:const SPLIT-DASH
   "Split at `-` character."
-  "-")
+  #"-")
 
 (defn SPLIT-COMPOUND
   "Split a given string into char-only and int-only parts."
-  [^String v]
-  (loop [^String v v
+  [v]
+  (loop [#+clj ^String v
+         #+cljs v v
          result []]
-    (if (seq v)
-      (let [[c & rst] v
-            split-rx (if (Character/isDigit c) "[^0-9]" "[0-9]")
-            split-result (.split v split-rx 2)
+    (if (empty? v)
+      result
+      (let [c (subs v 0 1)
+            split-rx (if (re-matches #"\d" c) #"[^0-9]" #"[0-9]")
+            split-result (string/split v split-rx 2)
             first-part (first split-result)
-            rest-part (.substring v (count first-part))]
-        (recur rest-part (conj result first-part)))
-      result)))
+            rest-part (subs v (count first-part))]
+        (recur rest-part (conj result first-part))))))
 
 ;; ## Splitting Algorithm
 ;;
