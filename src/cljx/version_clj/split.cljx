@@ -26,8 +26,11 @@
   [#+clj ^String x
    #+cljs ^js/String x]
   (if (re-matches #"\d+" x)
-    #+clj (Integer/parseInt x)
-    #+cljs (js/parseInt x)
+    #+clj (try
+            (Long/parseLong x)
+            (catch NumberFormatException _
+              (bigint x)))
+    #+cljs (js/parseFloat x)
     (.toLowerCase x)))
 
 (defmethod normalize-element :seq
