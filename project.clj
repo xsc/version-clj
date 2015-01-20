@@ -8,6 +8,7 @@
   :test-paths ["target/test-classes"]
 
   :profiles {:dev {:plugins [[org.clojure/clojurescript "0.0-2665"]
+                             [org.clojure/tools.reader "0.8.13"]
                              [com.cemerick/clojurescript.test "0.3.3"]
                              [com.keminglabs/cljx "0.5.0"]
                              [lein-cljsbuild "1.0.4"]]}
