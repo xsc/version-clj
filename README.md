@@ -73,7 +73,7 @@ The order of well-known qualifiers is case-insensitive and given as:
 < "final"     == "stable" == ""
 ```
 
-Have a look at the [respective unit tests](https://github.com/xsc/version-clj/blob/master/test/version_clj/compare_test.clj)
+Have a look at the [respective unit tests](https://github.com/xsc/version-clj/blob/master/test/cljx/version_clj/compare_test.cljx)
 to see the comparison mechanism in action.
 
 ## License
