@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: export-version
+        id: version
+        run: echo ::set-output name=value::${GITHUB_REF/refs\/tags\/v/}
+      - name: create-release
+        id: create_release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Version ${{ steps.version.outputs.value }}
+          body: |
+            This is version ${{ steps.version.outputs.value }} of `version-clj`.
+
+            *Bugfixes*
+            - TODO
+
+            *Features*
+            - TODO
+
+            *Notes*
+            - TODO
+
+            *Artifact Coordinates*
+
+            ```clojure
+            [version-clj "${{ steps.version.outputs.value }}"]
+            ```
+          draft: true
+          prerelease: false
