@@ -9,9 +9,7 @@
                  [org.clojure/clojurescript "1.10.773" :scope "provided"]
                  [com.google.code.findbugs/jsr305 "3.0.2" :scope "provided"]]
 
-  :profiles {:dev
-             {:plugins [[lein-cljsbuild "1.1.8"]]}
-             :kaocha
+  :profiles {:kaocha
              {:dependencies [[lambdaisland/kaocha "1.0.732"
                               :exclusions [org.clojure/spec.alpha]]
                              [lambdaisland/kaocha-cljs "0.0-71"
