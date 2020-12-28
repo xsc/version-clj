@@ -13,3 +13,9 @@ pom.xml.asc
 *.swp
 *~
 .nrepl-port
+
+# cljs
+node_modules/
+.cljs_node_repl/
+out
+

@@ -1,6 +1,6 @@
 (ns version-clj.compare-test
-  (:require #+clj [clojure.test :refer [deftest are]]
-            #+cljs [cemerick.cljs.test :refer-macros [deftest are]]
+  (:require #?(:clj [clojure.test :refer [deftest are]]
+               :cljs [cljs.test :refer-macros [deftest are]])
             [version-clj.compare :refer [version-compare]]))
 
 (deftest t-version-compare
