@@ -1,20 +1,16 @@
 # version-clj
 
-__version-clj__ is a Clojure &amp; ClojureScript library for analysis and comparison of artifact version numbers.
+![CI](https://github.com/xsc/version-clj/workflows/CI/badge.svg?branch=master)
+[![clojars](https://img.shields.io/clojars/v/version-cljsvg)](https://clojars.org/version-clj)
+[![codecov](https://codecov.io/gh/xsc/version-clj/branch/master/graph/badge.svg?token=xmrXrhA6Z7)](https://codecov.io/gh/xsc/version-clj)
 
-[![Build Status](https://travis-ci.org/xsc/version-clj.svg?branch=master)](https://travis-ci.org/xsc/version-clj)
-[![endorse](https://api.coderwall.com/xsc/endorsecount.png)](https://coderwall.com/xsc)
+__version-clj__ is a Clojure &amp; ClojureScript library for analysis and
+comparison of artifact version numbers. It originated as a comparison mechanism
+in [lein-ancient][], a plugin to detect outdated dependencies in your packages.
 
-It originated as a comparison mechanism in [lein-ancient](https://github.com/xsc/lein-ancient), a plugin to detect
-outdated dependencies in your packages.
+[lein-ancient]: https://github.com/xsc/lein-ancient
 
 ## Usage
-
-__Leiningen__ ([via Clojars](https://clojars.org/version-clj))
-
-[![Clojars Project](http://clojars.org/version-clj/latest-version.svg)](http://clojars.org/version-clj)
-
-__REPL__
 
 ```clojure
 (use 'version-clj.core)
@@ -34,9 +30,11 @@ __REPL__
 
 ## Version Sequence Creation
 
-A version seq is a pair of version-information and qualifier-information. In general, a version string is split using
-dots (`.`) and dashes (`-`), but it is assumed that the last result of the dot-split represents qualifiers (except for its 
-first element which is put into the version data seq). For example, the algorithm might produce the following steps:
+A version seq is a pair of version-information and qualifier-information. In
+general, a version string is split using dots (`.`) and dashes (`-`), but it is
+assumed that the last result of the dot-split represents qualifiers (except for
+its first element which is put into the version data seq). For example, the
+algorithm might produce the following steps:
 
 ```clojure
    "9.1-0-1.1-alpha4"
@@ -49,12 +47,13 @@ first element which is put into the version data seq). For example, the algorith
 => [(9 (1 0 1) 1) ("alpha" 4)]                             ;; normalize qualifiers again
 ```
 
-This should create results that represent an intuitive reading of version numbers.
+This should create results that represent an intuitive reading of version
+numbers.
 
 ## Version Comparison
 
-Version seqs are compared by extending them to the same length (using zero/nil) followed by an element-wise
-comparison.
+Version seqs are compared by extending them to the same length (using zero/nil)
+followed by an element-wise comparison.
 
 - Integers are compared numerically.
 - Strings are compared using a table of well-known qualifiers or lexicographically.
@@ -73,8 +72,10 @@ The order of well-known qualifiers is case-insensitive and given as:
 < "final"     == "stable" == ""
 ```
 
-Have a look at the [respective unit tests](https://github.com/xsc/version-clj/blob/master/test/cljx/version_clj/compare_test.cljx)
-to see the comparison mechanism in action.
+Have a look at the [respective unit tests][compare-test] to see the comparison
+mechanism in action.
+
+[compare-test]: https://github.com/xsc/version-clj/blob/master/test/version_clj/compare_test.cljc
 
 ## License
 
