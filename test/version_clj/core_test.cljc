@@ -4,7 +4,7 @@
             [version-clj.core :refer [snapshot? qualified?]]))
 
 (deftest t-snapshot
-  (are [v r] (= (boolean (snapshot? v)) r)
+  (are [v r] (= r (boolean (snapshot? v)))
        "1.0.0"                  false
        "SNAPSHOT"               true
        "1-SNAPSHOT"             true
@@ -13,7 +13,7 @@
        "1.0-NOSNAPSHOT"         false))
 
 (deftest t-qualified
-  (are [v r] (= (boolean (qualified? v)) r)
+  (are [v r] (= r (boolean (qualified? v)))
        "1.0.0"                  false
        "SNAPSHOT"               true
        "1-SNAPSHOT"             true

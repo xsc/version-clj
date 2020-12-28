@@ -87,6 +87,18 @@
             rest-part (subs v (count first-part))]
         (recur rest-part (conj result first-part))))))
 
+;; ## Variants
+
+(def ^:private split-point-variants
+  {:default    [SPLIT-DOT SPLIT-DASH SPLIT-COMPOUND]})
+
+(defn- to-split-points
+  [value]
+  (if (keyword? value)
+    (or (get split-point-variants value)
+        (get split-point-variants :default))
+    value))
+
 ;; ## Splitting Algorithm
 ;;
 ;; We employ a special treatment of the first element of the last split vector.
@@ -121,21 +133,64 @@
           (rest-split-at-points rst s)
           (map #(rest-split-at-points rst %) parts))))))
 
+(letfn [(split* [version]
+          (if-let [candidate (last version)]
+            (cond (seq? candidate)
+                  (if-let [[version' candidate] (split* candidate)]
+                    [(concat (butlast version) version') candidate])
+
+                  (and (string? candidate)
+                       (re-matches #"[a-zA-Z]+" candidate))
+                  [(butlast version) candidate])))]
+  (defn- find-qualifier
+    [version]
+    ;; We should not move things if they are a substantial part of the
+    ;; version, e.g. in "alpha" or "1.alpha.2". That means, there needs
+    ;; to be at least one dot and a dash in the last part of the version.
+    (if (next (last version))
+      (split* version))))
+
+(defn- move-qualifier-from-version
+  "In some cases, there is an alphanumerical modifier in the version part of
+   the sequence, which needs to be moved into the qualifier part. E.g.:
+
+       \"0.5.0-alpha.1\"
+       -> r0: ((\"0\") (\"5\") (\"0\" \"alpha\"))
+       -> r1: (\"1\")
+
+   We need to find the innermost last element of r0 and move it into r1, iff
+   it is not numeric.
+
+   ATTENTION: This is fragile and won't work e.g. for `*-alpha.1.2`."
+  [version qualifier]
+  (if-let [[version' candidate] (find-qualifier version)]
+    [version' (cons candidate qualifier)]))
+
+(defn- combine-with-qualifier
+  "After the first split, we might have part of the version in
+   the qualifier portion, e.g. `1.0.1-alpha` results in a qualifier of
+   `[(\"1\") (\"alpha\")]`.
+
+   Thus, we have to account for that and move the first part of the
+   qualifier back into the version."
+  [version [fq & rq :as qualifier]]
+  (if fq
+    (cond-> [(concat version [fq])]
+      rq (conj rq))))
+
 (defn version->seq
   "Split version string using the given split points, creating a two-element vector
    representing a version/qualifiers pair."
-  ([^String s] (version->seq [SPLIT-DOT SPLIT-DASH SPLIT-COMPOUND] s))
+  ([^String s] (version->seq :default s))
   ([split-points ^String s]
-   (if-not (seq split-points)
-     (vector s)
-     (let [[p & rst] split-points
-           [v0 v1] (first-split-at-point p s)
-           r0 (map #(rest-split-at-points rst %) v0)
-           r1 (rest-split-at-points rst v1)]
-       (if-let [p (first r1)]
-         (let [r0 (normalize-version-seq (concat r0 [p]))
-               r1 (normalize-version-seq (rest r1))]
-           (if (seq r1)
-             (vector r0 r1)
-             (vector r0)))
-         (vector (normalize-version-seq r0)))))))
+   (let [split-points (to-split-points split-points)]
+     (if-not (seq split-points)
+       (vector s)
+       (let [[p & rst] split-points
+             [v0 v1] (first-split-at-point p s)
+             version (map #(rest-split-at-points rst %) v0)
+             qualifier (rest-split-at-points rst v1)]
+         (->> (or (move-qualifier-from-version version qualifier)
+                  (combine-with-qualifier version qualifier)
+                  [version])
+              (mapv normalize-version-seq)))))))
