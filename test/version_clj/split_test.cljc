@@ -1,6 +1,6 @@
 (ns version-clj.split-test
-  (:require #+clj [clojure.test :refer [deftest are is]]
-            #+cljs [cemerick.cljs.test :refer-macros [deftest are is]]
+  (:require #?(:clj [clojure.test :refer [deftest are is]]
+               :cljs [cljs.test :refer-macros [deftest are is]])
             [version-clj.split :refer [version->seq]]))
 
 (deftest t-split
@@ -18,6 +18,6 @@
 (deftest t-split-with-large-number
   (is (= (version->seq "0.0.1-20141002100138")
          [[0 0 1] [20141002100138]]))
-  #+clj
-  (let [v (str Long/MAX_VALUE "12345")]
-    (is (= (version->seq v) [[(bigint v)]]))))
+  #?(:clj
+     (let [v (str Long/MAX_VALUE "12345")]
+       (is (= (version->seq v) [[(bigint v)]])))))

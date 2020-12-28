@@ -23,14 +23,15 @@
   :default nil)
 
 (defmethod normalize-element :string
-  [#+clj ^String x
-   #+cljs ^js/String x]
+  [#?(:clj ^String x, :cljs ^js/String x)]
   (if (re-matches #"\d+" x)
-    #+clj (try
-            (Long/parseLong x)
-            (catch NumberFormatException _
-              (bigint x)))
-    #+cljs (js/parseFloat x)
+    #?(:clj
+       (try
+         (Long/parseLong x)
+         (catch NumberFormatException _
+           (bigint x)))
+       :cljs
+       (js/parseFloat x))
     (.toLowerCase x)))
 
 (defmethod normalize-element :seq
@@ -75,8 +76,7 @@
 (defn SPLIT-COMPOUND
   "Split a given string into char-only and int-only parts."
   [v]
-  (loop [#+clj ^String v
-         #+cljs v v
+  (loop [#?(:clj ^String v, :cljs ^js/String v) v
          result []]
     (if (empty? v)
       result
