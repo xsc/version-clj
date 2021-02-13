@@ -1,10 +1,11 @@
 (defproject version-clj "1.0.0-SNAPSHOT"
   :description "Version Analysis and Comparison for Clojure"
   :url "https://github.com/xsc/version-clj"
-  :license {:name "MIT License"
-            :url "none"
+  :license {:name "MIT"
+            :url "https://choosealicense.com/licenses/mit"
             :year 2013
-            :key "mit"}
+            :key "mit"
+            :comment "MIT License"}
   :dependencies [[org.clojure/clojure "1.10.1" :scope "provided"]
                  [org.clojure/clojurescript "1.10.773" :scope "provided"]
                  [com.google.code.findbugs/jsr305 "3.0.2" :scope "provided"]]
