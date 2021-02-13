@@ -1,7 +1,7 @@
 # version-clj
 
-![CI](https://github.com/xsc/version-clj/workflows/CI/badge.svg?branch=master)
 [![clojars](https://img.shields.io/clojars/v/version-clj.svg)](https://clojars.org/version-clj)
+![CI](https://github.com/xsc/version-clj/workflows/CI/badge.svg?branch=master)
 [![codecov](https://codecov.io/gh/xsc/version-clj/branch/master/graph/badge.svg?token=xmrXrhA6Z7)](https://codecov.io/gh/xsc/version-clj)
 
 __version-clj__ is a Clojure &amp; ClojureScript library for analysis and
@@ -82,7 +82,7 @@ mechanism in action.
 ```
 MIT License
 
-Copyright (c) 2013-2020 Yannick Scherer
+Copyright (c) 2013-2021 Yannick Scherer
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

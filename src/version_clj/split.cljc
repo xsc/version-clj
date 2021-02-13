@@ -19,8 +19,7 @@
   (fn [v]
     (cond (string? v) :string
           (vector? v) :vector
-          (seq? v) :seq))
-  :default nil)
+          (seq? v) :seq)))
 
 (defmethod normalize-element :string
   [#?(:clj ^String x, :cljs ^js/String x)]
@@ -44,10 +43,6 @@
 (defmethod normalize-element :vector
   [x]
   (normalize-element (seq x)))
-
-(defmethod normalize-element nil
-  [x]
-  x)
 
 (defn normalize-version-seq
   "Normalize a version seq, creating a seq again."
@@ -87,17 +82,10 @@
             rest-part (subs v (count first-part))]
         (recur rest-part (conj result first-part))))))
 
-;; ## Variants
+;; ## Split Points
 
-(def ^:private split-point-variants
-  {:default    [SPLIT-DOT SPLIT-DASH SPLIT-COMPOUND]})
-
-(defn- to-split-points
-  [value]
-  (if (keyword? value)
-    (or (get split-point-variants value)
-        (get split-point-variants :default))
-    value))
+(def ^:private default-split-points
+  [SPLIT-DOT SPLIT-DASH SPLIT-COMPOUND])
 
 ;; ## Splitting Algorithm
 ;;
@@ -180,17 +168,13 @@
 
 (defn version->seq
   "Split version string using the given split points, creating a two-element vector
-   representing a version/qualifiers pair."
-  ([^String s] (version->seq :default s))
-  ([split-points ^String s]
-   (let [split-points (to-split-points split-points)]
-     (if-not (seq split-points)
-       (vector s)
-       (let [[p & rst] split-points
-             [v0 v1] (first-split-at-point p s)
-             version (map #(rest-split-at-points rst %) v0)
-             qualifier (rest-split-at-points rst v1)]
-         (->> (or (move-qualifier-from-version version qualifier)
-                  (combine-with-qualifier version qualifier)
-                  [version])
-              (mapv normalize-version-seq)))))))
+  representing a version/qualifiers pair."
+  [^String s]
+  (let [[p & rst] default-split-points
+        [v0 v1] (first-split-at-point p s)
+        version (map #(rest-split-at-points rst %) v0)
+        qualifier (rest-split-at-points rst v1)]
+    (->> (or (move-qualifier-from-version version qualifier)
+             (combine-with-qualifier version qualifier)
+             [version])
+         (mapv normalize-version-seq))))
