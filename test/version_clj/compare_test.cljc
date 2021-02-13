@@ -4,7 +4,7 @@
             [version-clj.compare :refer [version-compare]]))
 
 (deftest t-version-compare
-  (are [v0 v1 r] (= (version-compare v0 v1) r)
+  (are [v0 v1 r] (= r (version-compare v0 v1))
        ;; Numeric Comparison
        "1.0.0"          "1.0.0"           0
        "1.0.0"          "1.0"             0
@@ -36,6 +36,18 @@
        "1.0.0-alpha5"   "1.0.0-alpha23"  -1
        "1.0-RC5"        "1.0-RC20"       -1
        "1.0-RC11"       "1.0-RC6"         1
+
+       ;; Comparison nested vs. value
+       "1.0.0"          "1.0-1.0"        -1
+       "1.0-1.0"        "1.0.0"           1
+       "1.0-0.0"        "1.0.0"           0
+       "1.0.0"          "1.0-0.0"         0
+       "1.alpha.0"      "1.alpha-1.0"    -1
+       "1.alpha-1.0"    "1.alpha.0"       1
+
+       ;; Numbers are newer than strings
+       "1.x.1"          "1.0.1"          -1
+       "1.0.1"          "1.x.1"           1
 
        ;; Releases are newer than SNAPSHOTs
        "1.0.0"          "1.0.0-SNAPSHOT"  1
