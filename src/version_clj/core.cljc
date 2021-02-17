@@ -50,23 +50,16 @@
 (defn snapshot?
   "Check if the given version (string or seq) represents a SNAPSHOT."
   [v]
-  (some
-    (fn [x]
-      (cond (integer? x) false
-            (string? x) (= x "snapshot")
-            :else (snapshot? x)))
-    (to-version-seq v)))
+  (let [[v' q] (to-version-seq v)]
+    (or (= "snapshot" (first v'))
+        (->> q
+             (tree-seq sequential? identity)
+             (remove sequential?)
+             (some #{"snapshot"})))))
 
-(def qualified?
+(defn qualified?
   "Check if the given version (string or seq) represents a qualified version."
-  (letfn [(check-seq [sq]
-            (some
-              (fn [x]
-                (cond (integer? x) false
-                      (string? x) true
-                      :else (check-seq x)))
-              sq))]
-    (fn [v]
-      (let [v' (to-version-seq v)]
-        (or (snapshot? v')
-            (check-seq (qualifier-data v')))))))
+  [v]
+  (let [[v' q] (to-version-seq v)]
+    (or (= "snapshot" (first v'))
+        (some? q))))
