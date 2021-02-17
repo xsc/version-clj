@@ -1,5 +1,7 @@
-(ns version-clj.split
-  (:require [clojure.string :as string]))
+(ns ^:no-doc version-clj.split
+  (:require [version-clj.normalize :as normalize]
+            [version-clj.qualifiers :refer [default-qualifiers]]
+            [clojure.string :as string]))
 
 ;; ## Desired Results
 ;;
@@ -9,56 +11,40 @@
 ;; "1-SNAPSHOT"         -> ((1) ("SNAPSHOT"))
 ;; "1.0-1-0.2-alpha2"   -> ((1 (0 1 0) 2) ("alpha" 2))
 
-;; ## Normalization
-;;
-;; - Convert Strings to Integer
-;; - Replace one-element seqs with its element
-
-(defmulti normalize-element
-  "Normalize an Element by class."
-  (fn [v]
-    (cond (string? v) :string
-          (vector? v) :vector
-          (seq? v) :seq)))
-
-(defmethod normalize-element :string
-  [#?(:clj ^String x, :cljs ^js/String x)]
-  (if (re-matches #"\d+" x)
-    #?(:clj
-       (try
-         (Long/parseLong x)
-         (catch NumberFormatException _
-           (bigint x)))
-       :cljs
-       (js/parseFloat x))
-    (.toLowerCase x)))
-
-(defmethod normalize-element :seq
-  [x]
-  (let [r (map normalize-element x)]
-    (if (= (count r) 1)
-      (first r)
-      r)))
-
-(defmethod normalize-element :vector
-  [x]
-  (normalize-element (seq x)))
-
-(defn normalize-version-seq
-  "Normalize a version seq, creating a seq again."
-  [x]
-  (let [r (normalize-element x)]
-    (if (seq? r) r (vector r))))
-
-;; ## Split Points
+;; ## Split Helpers
 
 (defn- split
-  [v s]
-  (if (fn? v)
-    (v s)
-    (string/split s v)))
+  "Helper to perform a split operation, either by regex or function."
+  [split-point s]
+  (if (fn? split-point)
+    (split-point s)
+    (string/split s split-point)))
 
-;; ## Predefined Split Points
+(defn- split-once
+  "Helper to split exactly once on the given regex."
+  [re s]
+  #?(:clj  (string/split s re 2)
+     :cljs (if-let [parts (.exec re s)]
+             (let [idx (.-index parts)
+                   len (count (aget ^array parts 0))]
+               [(subs s 0 idx)
+                (subs s (+ idx len))])
+             [s])))
+
+(defn- split-all
+  "Helper to recursively apply split points."
+  [split-points s]
+  (if-not (seq split-points)
+    [s]
+    (filter
+      (complement empty?)
+      (let [[p & rst] split-points
+            parts (split p s)]
+        (if (= (count parts) 1)
+          (split-all rst s)
+          (map #(split-all rst %) parts))))))
+
+;; ## Split Points
 
 (def ^:const SPLIT-DOT
   "Split at `.` character."
@@ -68,113 +54,89 @@
   "Split at `-` character."
   #"-")
 
-(defn SPLIT-COMPOUND
+(def ^:const SPLIT-COMPOUND
   "Split a given string into char-only and int-only parts."
-  [v]
-  (loop [#?(:clj ^String v, :cljs ^js/String v) v
-         result []]
-    (if (empty? v)
-      result
-      (let [c (subs v 0 1)
-            split-rx (if (re-matches #"\d" c) #"[^0-9]" #"[0-9]")
-            split-result (string/split v split-rx 2)
-            first-part (first split-result)
-            rest-part (subs v (count first-part))]
-        (recur rest-part (conj result first-part))))))
-
-;; ## Split Points
-
-(def ^:private default-split-points
-  [SPLIT-DOT SPLIT-DASH SPLIT-COMPOUND])
+  #"(?<=\D)(?=\d)|(?<=\d)(?=\D)")
 
 ;; ## Splitting Algorithm
+
+;; ### Splitting a plain version
 ;;
-;; We employ a special treatment of the first element of the last split vector.
+;;     "1.0-1-x5.1"
+;;     -> ("1" "0-1-x" "1")
+;;     -> (("1") ("0" "1" "x5") ("1"))
+;;     -> ("1" ("0" "1" "x5") "1")
+;;     -> ("1" ("0" "1" ("x" "5")) "1")
+
+(defn- split-version
+  "Split a version that has already been separated from its qualifier."
+  [version]
+  (split-all [SPLIT-DOT SPLIT-DASH SPLIT-COMPOUND] version))
+
+;; ### Splitting a plain qualifier
 ;;
-;;    "1.0-1-0.1-SNAPSHOT"
-;;    -> ("1" "0-1-0" "1-SNAPSHOT")              # split using first split point
-;;    -> (("1" "0-1-0") "1-SNAPSHOT")            # group into version/rest
-;;    -> (("1" ("0" "1" "0")) ("1" "SNAPSHOT"))  # split using other split points
-;;    -> (("1" ("0" "1" "0") "1") ("SNAPSHOT"))  # merge first of rest into version
-;;    -> ((1 (0 1 0) 1) ("SNAPSHOT"))            # normalize
+;;     "RC-SNAPSHOT4.1
+;;     -> ("RC" "SNAPSHOT4.1")
+;;     -> ("RC" ("SNAPSHOT4" "1"))
+;;     -> ("RC" (("SNAPSHOT" "4") "1"))
+
+(defn- split-qualifier
+  "Split a qualifier that has already been separated from its version."
+  [v]
+  (split-all [SPLIT-DASH SPLIT-DOT SPLIT-COMPOUND] v))
+
+;; ### Splitting into version/qualifier
 ;;
+;; Either use a well-known qualifier or the last dash.
 
-(defn- first-split-at-point
-  "Split using first split point. Creates a two-element vector consisting of the parts.
-   The result should be interpreted as a version/qualifier data pair."
-  [first-split-point ^String s]
-  (let [parts (split first-split-point s)]
-    (if (= (count parts) 1)
-      (vector nil s)
-      (vector (butlast parts) (last parts)))))
+(def qualifier-regex
+  "Create a regex that can split at known qualifiers."
+  (memoize
+    (fn [qualifiers]
+      (let [rx-or (->> (keys qualifiers)
+                       (remove empty?)
+                       #?(:clj (map #(str "\\Q" % "\\E")))
+                       (string/join "|"))]
+        (re-pattern
+          (str "(?i)((?<=[0-9])|[.\\-])(?=("
+               rx-or
+               ")([0-9.\\-]|$))"))))))
 
-(defn- rest-split-at-points
-  "Split version string recursively at the given split points."
-  [split-points ^String s]
-  (if-not (seq split-points)
-    [s]
-    (filter
-      (complement empty?)
-      (let [[p & rst] split-points
-            parts (split p s)]
-        (if (= (count parts) 1)
-          (rest-split-at-points rst s)
-          (map #(rest-split-at-points rst %) parts))))))
+(defn- split-known-qualifier
+  "Find one of the known qualifiers and split right before it."
+  [qualifiers v]
+  (split-once (qualifier-regex qualifiers) v))
 
-(letfn [(split* [version]
-          (if-let [candidate (last version)]
-            (cond (seq? candidate)
-                  (if-let [[version' candidate] (split* candidate)]
-                    [(concat (butlast version) version') candidate])
+(def split-last-dash
+  "Split at last `-` character."
+  (fn [v]
+    (if-let [idx (string/last-index-of v "-")]
+      [(subs v 0 idx) (subs v (inc idx))]
+      [v])))
 
-                  (and (string? candidate)
-                       (re-matches #"[a-zA-Z]+" candidate))
-                  [(butlast version) candidate])))]
-  (defn- find-qualifier
-    [version]
-    ;; We should not move things if they are a substantial part of the
-    ;; version, e.g. in "alpha" or "1.alpha.2". That means, there needs
-    ;; to be at least one dot and a dash in the last part of the version.
-    (if (next (last version))
-      (split* version))))
+(defn- split-version-and-qualifier
+  [v qualifiers]
+  (if (empty? qualifiers)
+    (split-last-dash v)
+    (let [[version qualifier] (split-known-qualifier qualifiers v)]
+      (if qualifier
+        [version qualifier]
+        (split-last-dash v)))))
 
-(defn- move-qualifier-from-version
-  "In some cases, there is an alphanumerical modifier in the version part of
-   the sequence, which needs to be moved into the qualifier part. E.g.:
-
-       \"0.5.0-alpha.1\"
-       -> r0: ((\"0\") (\"5\") (\"0\" \"alpha\"))
-       -> r1: (\"1\")
-
-   We need to find the innermost last element of r0 and move it into r1, iff
-   it is not numeric.
-
-   ATTENTION: This is fragile and won't work e.g. for `*-alpha.1.2`."
-  [version qualifier]
-  (if-let [[version' candidate] (find-qualifier version)]
-    [version' (cons candidate qualifier)]))
-
-(defn- combine-with-qualifier
-  "After the first split, we might have part of the version in
-   the qualifier portion, e.g. `1.0.1-alpha` results in a qualifier of
-   `[(\"1\") (\"alpha\")]`.
-
-   Thus, we have to account for that and move the first part of the
-   qualifier back into the version."
-  [version [fq & rq :as qualifier]]
-  (if fq
-    (cond-> [(concat version [fq])]
-      rq (conj rq))))
+;; ### Full Algorithm
+;;
+;; 1. Split into version and qualifier
+;; 2. Split version
+;; 3. Split qualifier
+;; 4. Normalise result
 
 (defn version->seq
-  "Split version string using the given split points, creating a two-element vector
-  representing a version/qualifiers pair."
-  [^String s]
-  (let [[p & rst] default-split-points
-        [v0 v1] (first-split-at-point p s)
-        version (map #(rest-split-at-points rst %) v0)
-        qualifier (rest-split-at-points rst v1)]
-    (->> (or (move-qualifier-from-version version qualifier)
-             (combine-with-qualifier version qualifier)
-             [version])
-         (mapv normalize-version-seq))))
+  "Split version string into a sequence representation with logical grouping."
+  [v & [{:keys [qualifiers] :or {qualifiers default-qualifiers}}]]
+  (let [[version qualifier] (split-version-and-qualifier v qualifiers)]
+    (->> (if qualifier
+           (vector
+             (split-version version)
+             (split-qualifier qualifier))
+           [(split-version version)])
+         (mapv normalize/normalize-version-seq))))
