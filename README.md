@@ -1,6 +1,7 @@
 # version-clj
 
 [![clojars](https://img.shields.io/clojars/v/version-clj.svg)](https://clojars.org/version-clj)
+[![Documentation](https://cljdoc.org/badge/xsc/version-clj)](https://cljdoc.org/d/xsc/version-clj/CURRENT)
 ![CI](https://github.com/xsc/version-clj/workflows/CI/badge.svg?branch=master)
 [![codecov](https://codecov.io/gh/xsc/version-clj/branch/master/graph/badge.svg?token=xmrXrhA6Z7)](https://codecov.io/gh/xsc/version-clj)
 
@@ -13,44 +14,41 @@ in [lein-ancient][], a plugin to detect outdated dependencies in your packages.
 ## Usage
 
 ```clojure
-(use 'version-clj.core)
-
-(version->seq "1.0.0-SNAPSHOT")
-;; => [(1 0 0) ("snapshot")]
-(version->seq "9.1-0-1.1-jdbc4")
-;; => [(9 (1 0 1) 1) ("jdbc" 4)]
-
-(version-compare "1.0" "1.0.0")
-;; => 0
-(version-compare "1.0-alpha5" "1.0-alpha14")
-;; => -1
-(version-compare "1.0-milestone" "1.0.0-final")
-;; => -1
+(require '[version-clj.core :as v])
 ```
 
-## Version Sequence Creation
-
-A version seq is a pair of version-information and qualifier-information. In
-general, a version string is split using dots (`.`) and dashes (`-`), but it is
-assumed that the last result of the dot-split represents qualifiers (except for
-its first element which is put into the version data seq). For example, the
-algorithm might produce the following steps:
+### Comparison
 
 ```clojure
-   "9.1-0-1.1-alpha4"
-=> ("9" "1-0-1" "1-alpha4")                                ;; split by dots
-=> (("9" "1-0-1") ("1-alpha4"))                            ;; group into version/qualifier data
-=> ((("9") ("1" "0" "1")) (("1" "alpha4")))                ;; split by dashes
-=> (((("9")) (("1") ("0") ("1"))) ((("1") ("alpha" "4")))) ;; split by letter/integer changes
-=> [(9 (1 0 1)) (1 ("alpha" 4))]                           ;; normalize
-=> [(9 (1 0 1) 1) (("alpha" 4))]                           ;; rearrange remaining version data
-=> [(9 (1 0 1) 1) ("alpha" 4)]                             ;; normalize qualifiers again
+(v/older? "1.0.0-alpha" "1.0.0")     ;; => true
+(v/newer? "1.0.0-rc2" "1.0.0-rc1")   ;; => true
+(v/version-compare "1.0.0" "0.9.0")  ;; => 1
 ```
 
-This should create results that represent an intuitive reading of version
-numbers.
+### Sorting
 
-## Version Comparison
+```clojure
+(v/version-sort ["1.0.0-alpha", "1.0.0", "1.0.0-SNAPSHOT", "0.9.0-RC1"])
+;; => ("0.9.0-RC1" "1.0.0-alpha" "1.0.0-SNAPSHOT" "1.0.0")
+```
+
+### Analysis
+
+```clojure
+(v/parse "1.0.0-rc-snapshot")
+;; => {:version [(1 0 0) ("rc" "snapshot")],
+;;     :qualifiers #{"rc" "snapshot"},
+;;     :snapshot? true,
+;;     :qualified? true}
+
+(v/snapshot? "1.0.0")
+;; => false
+
+(v/qualified? "1.0.0-rc")
+;; => true
+```
+
+## Comparison Rules
 
 Version seqs are compared by extending them to the same length (using zero/nil)
 followed by an element-wise comparison.

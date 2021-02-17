@@ -1,23 +1,57 @@
 (ns version-clj.core
   (:require [version-clj.split :as sp]
-            [version-clj.compare :as c]))
+            [version-clj.compare :as c]
+            [version-clj.qualifiers :refer [default-qualifiers]]))
 
 ;; ## Facade
 
-(def version->seq
+(defn version->seq
   "Convert version string to version seq (a pair of version/qualifiers) by
    using `.`, `-` and integer/letter changes to detect version parts."
-  sp/version->seq)
+  [version & [{:keys [qualifiers]
+               :or {qualifiers default-qualifiers}
+               :as opts}]]
+  (sp/version->seq version opts))
 
-(def version-seq-compare
-  "Compare two version seqs."
-  c/version-seq-compare)
+(defn version-seq-compare
+  "Compare two sequences created by `version->seq`; returns `-1`, `0` or `1`."
+  [a b & [{:keys [qualifiers]
+           :or {qualifiers default-qualifiers}
+           :as opts}]]
+  (c/version-seq-compare a b opts))
 
-(def version-compare
-  "Compare two version strings."
-  c/version-compare)
+(defn version-compare
+  "Compare two version strings; returns `-1`, `0` or `1`."
+  [a b & [{:keys [qualifiers]
+           :or {qualifiers default-qualifiers}
+           :as opts}]]
+  (c/version-compare a b opts))
 
-;; ## Sorting & Comparison
+;; ## Comparison
+
+(defn older?
+  "Check whether the given version string is older than the other candidate."
+  [a b & [opts]]
+  (neg? (version-compare a b opts)))
+
+(defn newer?
+  "Check whether the given version string is newer than the other candidate."
+  [a b & [opts]]
+  (pos? (version-compare a b opts)))
+
+(defn older-or-equal?
+  "Check whether the given version string is older than or equal to the other
+   candidate."
+  [a b & [opts]]
+  (not (newer? a b opts)))
+
+(defn newer-or-equal?
+  "Check whether the given version string is newer than or equal to the other
+   candidate."
+  [a b & [opts]]
+  (not (older? a b opts)))
+
+;; ## Sorting
 
 (defn version-sort
   "Sort a seq of version strings."
@@ -31,35 +65,56 @@
 
 ;; ## Analysis
 
-(defn- to-version-seq
-  [v]
-  (if (string? v)
-    (version->seq v)
-    (seq v)))
+(defn- parse-version-seq
+  [version opts]
+  (if (string? version)
+    (version->seq version opts)
+    (seq version)))
+
+(defn- qualifiers-of
+  [[_ qualifier]]
+  (some->> qualifier
+           (tree-seq sequential? identity)
+           (filter string?)))
+
+(defn parse
+  "Parse version into a map of:
+
+   - `:version`: a sequence representing the parsed version,
+   - `:qualifiers`: a set containing all string qualifiers,
+   - `:snapshot?`: true if version represents a snapshot,
+   - `:qualified?`: true if version is qualified.
+  "
+  [version & [opts]]
+  (let [vs (parse-version-seq version opts)
+        qs (set (qualifiers-of vs))]
+    {:version    vs
+     :qualifiers qs
+     :snapshot?  (contains? qs "snapshot")
+     :qualified? (not (empty? qs))}))
 
 (defn version-data
-  "Get version data from version seq."
-  [v]
-  (first (to-version-seq v)))
+  "Get version data from version."
+  [version & [opts]]
+  (first (parse-version-seq version opts)))
 
 (defn qualifier-data
-  "Get qualifier data from version seq."
-  [v]
-  (second (to-version-seq v)))
+  "Get qualifier data from version."
+  [version & [opts]]
+  (second (parse-version-seq version opts)))
 
 (defn snapshot?
   "Check if the given version (string or seq) represents a SNAPSHOT."
-  [v]
-  (let [[v' q] (to-version-seq v)]
-    (or (= "snapshot" (first v'))
-        (->> q
-             (tree-seq sequential? identity)
-             (remove sequential?)
-             (some #{"snapshot"})))))
+  [version & [opts]]
+  (->> (parse-version-seq version opts)
+       (qualifiers-of)
+       (some #{"snapshot"})
+       (some?)))
 
 (defn qualified?
   "Check if the given version (string or seq) represents a qualified version."
-  [v]
-  (let [[v' q] (to-version-seq v)]
-    (or (= "snapshot" (first v'))
-        (some? q))))
+  [version & [opts]]
+  (-> (parse-version-seq version opts)
+      (qualifiers-of)
+      (empty?)
+      (not)))

@@ -14,8 +14,8 @@
        "1.0.1-alpha2"           [[1 0 1] ["alpha" 2]]
        "11.2.0.3.0"             [[11 2 0 3 0]]
        "1.0-1-0.2-RC"           [[1 [0 1 0] 2] ["rc"]]
-       "alpha"                  [["alpha"]]
-       "alpha-2"                [["alpha"] [2]]
+       "alpha"                  [[] ["alpha"]]
+       "alpha-2"                [[] ["alpha" 2]]
        "1.alpha"                [[1] ["alpha"]]
        "1.alpha.2"              [[1] ["alpha" 2]]
        "1-alpha.2"              [[1] ["alpha" 2]]
@@ -39,8 +39,6 @@
          "1.0.1-alpha2"           [[1 0 1] ["alpha" 2]]
          "11.2.0.3.0"             [[11 2 0 3 0]]
          "1.0-1-0.2-RC"           [[1 [0 1 0] 2] ["rc"]]
-         "alpha"                  [["alpha"]]
-         "alpha-2"                [["alpha"] [2]]
          "1-alpha.2"              [[1] ["alpha" 2]]
          "1-alpha.2.2"            [[1] ["alpha" 2 2]]
          "1-alpha2.2"             [[1] [["alpha" 2] 2]]
@@ -49,10 +47,12 @@
          "0.0.3-alpha.8+oryOS.15" [[0 0 3] ["alpha" [8 "+oryos"] 15]]))
   (testing "deviants."
     (are [version v] (= v (version->seq version {:qualifiers {}}))
+         "alpha"                  [["alpha"]]
+         "alpha-2"                [["alpha" 2]]
          "1a"                     [[1 "a"]]
          "1.alpha"                [[1 "alpha"]]
          "1.alpha.2"              [[1 "alpha" 2]]
-         "1.alpha-1.0"            [[1 "alpha"] [1 0]])))
+         "1.alpha-1.0"            [[1 ["alpha" 1] 0]])))
 
 (deftest t-split-with-large-number
   (is (= [[0 0 1] [20141002100138]]
