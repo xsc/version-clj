@@ -1,7 +1,7 @@
 # version-clj
 
 [![clojars](https://img.shields.io/clojars/v/version-clj.svg)](https://clojars.org/version-clj)
-[![Documentation](https://cljdoc.org/badge/xsc/version-clj)](https://cljdoc.org/d/xsc/version-clj/CURRENT)
+[![Documentation](https://cljdoc.org/badge/version-clj/version-clj)](https://cljdoc.org/d/version-clj/version-clj/CURRENT)
 ![CI](https://github.com/xsc/version-clj/workflows/CI/badge.svg?branch=master)
 [![codecov](https://codecov.io/gh/xsc/version-clj/branch/master/graph/badge.svg?token=xmrXrhA6Z7)](https://codecov.io/gh/xsc/version-clj)
 
