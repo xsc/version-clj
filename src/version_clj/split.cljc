@@ -16,14 +16,18 @@
 (defn- split
   "Helper to perform a split operation, either by regex or function."
   [split-point s]
-  (if (fn? split-point)
-    (split-point s)
-    (string/split s split-point)))
+  (string/split s split-point))
 
 (defn- split-once
   "Helper to split exactly once on the given regex."
   [re s]
-  #?(:clj  (string/split s re 2)
+  #?(:clj  (let [m (re-matcher re s)]
+             (if (.find m)
+               (let [idx (.start m)
+                     len (- (.end m) idx)]
+                 [(subs s 0 idx)
+                  (subs s (+ idx len))])
+               [s]))
      :cljs (if-let [parts (.exec re s)]
              (let [idx (.-index parts)
                    len (count (aget ^array parts 0))]
@@ -57,6 +61,11 @@
 (def ^:const SPLIT-COMPOUND
   "Split a given string into char-only and int-only parts."
   #"(?<=\D)(?=\d)|(?<=\d)(?=\D)")
+
+(def ^:const SPLIT-LAST-QUALIFIER
+  "Split at the last dash, if followed by a letter or at least 14 numbers
+   (indicating a date)."
+  #"(?i)-(?=[^\d]|\d{14})")
 
 ;; ## Splitting Algorithm
 
@@ -98,30 +107,28 @@
                        #?(:clj (map #(str "\\Q" % "\\E")))
                        (string/join "|"))]
         (re-pattern
-          (str "(?i)((?<=[0-9])|[.\\-])(?=("
+          (str "(?i)(^|(?<=\\d)|[.\\-])(?=("
                rx-or
-               ")([0-9.\\-]|$))"))))))
+               ")([\\d.\\-]|$))"))))))
 
 (defn- split-known-qualifier
   "Find one of the known qualifiers and split right before it."
   [qualifiers v]
   (split-once (qualifier-regex qualifiers) v))
 
-(def split-last-dash
-  "Split at last `-` character."
+(def split-unknown-qualifier
+  "Split at `-`, followed by a letter."
   (fn [v]
-    (if-let [idx (string/last-index-of v "-")]
-      [(subs v 0 idx) (subs v (inc idx))]
-      [v])))
+    (split-once SPLIT-LAST-QUALIFIER v)))
 
 (defn- split-version-and-qualifier
   [v qualifiers]
   (if (empty? qualifiers)
-    (split-last-dash v)
+    (split-unknown-qualifier v)
     (let [[version qualifier] (split-known-qualifier qualifiers v)]
       (if qualifier
         [version qualifier]
-        (split-last-dash v)))))
+        (split-unknown-qualifier v)))))
 
 ;; ### Full Algorithm
 ;;
