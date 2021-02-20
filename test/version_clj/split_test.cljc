@@ -14,6 +14,7 @@
        "1.0.1-alpha2"           [[1 0 1] ["alpha" 2]]
        "11.2.0.3.0"             [[11 2 0 3 0]]
        "1.0-1-0.2-RC"           [[1 [0 1 0] 2] ["rc"]]
+       "1.0-612"                [[1 0] [612]]
        "alpha"                  [[] ["alpha"]]
        "alpha-2"                [[] ["alpha" 2]]
        "1.alpha"                [[1] ["alpha"]]
@@ -48,7 +49,7 @@
   (testing "deviants."
     (are [version v] (= v (version->seq version {:qualifiers {}}))
          "alpha"                  [["alpha"]]
-         "alpha-2"                [["alpha" 2]]
+         "alpha-2"                [["alpha"] [2]]
          "1a"                     [[1 "a"]]
          "1.alpha"                [[1 "alpha"]]
          "1.alpha.2"              [[1 "alpha" 2]]

@@ -63,9 +63,8 @@
   #"(?<=\D)(?=\d)|(?<=\d)(?=\D)")
 
 (def ^:const SPLIT-LAST-QUALIFIER
-  "Split at the last dash, if followed by a letter or at least 14 numbers
-   (indicating a date)."
-  #"(?i)-(?=[^\d]|\d{14})")
+  "Split at the dash, if followed by a letter or only numbers."
+  #"(?i)-(?=[^\d]|\d+$)")
 
 ;; ## Splitting Algorithm
 
