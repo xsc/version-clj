@@ -1,4 +1,4 @@
-(ns version-clj.normalize)
+(ns ^:no-doc version-clj.normalize)
 
 ;; ## Normalization
 ;;
