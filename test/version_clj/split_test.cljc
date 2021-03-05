@@ -30,22 +30,22 @@
 
 (deftest t-split-without-qualifiers
   (testing "well-behaving."
-    (are [version v] (= (version->seq version)
+    (are [version] (= (version->seq version)
                         (version->seq version {:qualifiers {}}))
-         "1.0.0"                  [[1 0 0]]
-         "1.0"                    [[1 0]]
-         "1"                      [[1]]
-         "1-a"                    [[1] ["a"]]
-         "1.0.1-SNAPSHOT"         [[1 0 1] ["snapshot"]]
-         "1.0.1-alpha2"           [[1 0 1] ["alpha" 2]]
-         "11.2.0.3.0"             [[11 2 0 3 0]]
-         "1.0-1-0.2-RC"           [[1 [0 1 0] 2] ["rc"]]
-         "1-alpha.2"              [[1] ["alpha" 2]]
-         "1-alpha.2.2"            [[1] ["alpha" 2 2]]
-         "1-alpha2.2"             [[1] [["alpha" 2] 2]]
-         "0.5.0-alpha.1"          [[0 5 0] ["alpha" 1]]
-         "0.5.0-alpha.1"          [[0 5 0] ["alpha" 1]]
-         "0.0.3-alpha.8+oryOS.15" [[0 0 3] ["alpha" [8 "+oryos"] 15]]))
+         "1.0.0"
+         "1.0"
+         "1"
+         "1-a"
+         "1.0.1-SNAPSHOT"
+         "1.0.1-alpha2"
+         "11.2.0.3.0"
+         "1.0-1-0.2-RC"
+         "1-alpha.2"
+         "1-alpha.2.2"
+         "1-alpha2.2"
+         "0.5.0-alpha.1"
+         "0.5.0-alpha.1"
+         "0.0.3-alpha.8+oryOS.15"))
   (testing "deviants."
     (are [version v] (= v (version->seq version {:qualifiers {}}))
          "alpha"                  [["alpha"]]

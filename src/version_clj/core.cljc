@@ -8,6 +8,7 @@
 (defn version->seq
   "Convert version string to version seq (a pair of version/qualifiers) by
    using `.`, `-` and integer/letter changes to detect version parts."
+  #_{:clj-kondo/ignore [:unused-binding]}
   [version & [{:keys [qualifiers]
                :or {qualifiers default-qualifiers}
                :as opts}]]
@@ -15,6 +16,7 @@
 
 (defn version-seq-compare
   "Compare two sequences created by `version->seq`; returns `-1`, `0` or `1`."
+  #_{:clj-kondo/ignore [:unused-binding]}
   [a b & [{:keys [qualifiers]
            :or {qualifiers default-qualifiers}
            :as opts}]]
@@ -22,6 +24,7 @@
 
 (defn version-compare
   "Compare two version strings; returns `-1`, `0` or `1`."
+  #_{:clj-kondo/ignore [:unused-binding]}
   [a b & [{:keys [qualifiers]
            :or {qualifiers default-qualifiers}
            :as opts}]]
@@ -91,7 +94,7 @@
     {:version    vs
      :qualifiers qs
      :snapshot?  (contains? qs "snapshot")
-     :qualified? (not (empty? qs))}))
+     :qualified? (boolean (seq qs))}))
 
 (defn version-data
   "Get version data from version."
@@ -116,5 +119,5 @@
   [version & [opts]]
   (-> (parse-version-seq version opts)
       (qualifiers-of)
-      (empty?)
-      (not)))
+      (seq)
+      (boolean)))
