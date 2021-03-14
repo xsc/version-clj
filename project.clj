@@ -10,7 +10,9 @@
                  [org.clojure/clojurescript "1.10.773" :scope "provided"]
                  [com.google.code.findbugs/jsr305 "3.0.2" :scope "provided"]]
 
-  :profiles {:kaocha
+  :profiles {:dev
+             {:global-vars {*warn-on-reflection* true}}
+             :kaocha
              {:dependencies [[lambdaisland/kaocha "1.0.732"
                               :exclusions [org.clojure/spec.alpha]]
                              [lambdaisland/kaocha-cljs "0.0-71"
