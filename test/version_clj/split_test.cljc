@@ -3,6 +3,15 @@
                :cljs [cljs.test :refer-macros [deftest testing are is]])
             [version-clj.split :refer [version->seq]]))
 
+(deftest t-split-once-sanity-check
+  (let [split-once @#'version-clj.split/split-once
+        rx #"(^|(?<=\d)|-)(?=alpha)"]
+    (are [in out] (= out (split-once rx in))
+         "1-alpha2.2"             ["1" "alpha2.2"]
+         "alpha"                  ["" "alpha"]
+         "1alpha"                 ["1" "alpha"]
+         "0.0.3-alpha.8+oryOS.15" ["0.0.3" "alpha.8+oryOS.15"])))
+
 (deftest t-split
   (are [version v] (= v (version->seq version))
        "1.0.0"                  [[1 0 0]]
