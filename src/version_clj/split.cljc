@@ -19,7 +19,15 @@
   (string/split s split-point))
 
 (defn- split-once
-  "Helper to split exactly once on the given regex."
+  "Helper to split exactly once on the given regex. This is NOT THE SAME as
+   `(string/split s re 2)` since:
+
+   - splitting at the beginning will yield `[\"\" \"...\"]` where `string/split`
+     does not split at all,
+   - splitting with lookahead/lookbehind seems broken in ClojureScript.
+
+   See the `t-split-once-sanity-check` testcase for examples that yield
+   surprising results with `string/split`."
   [re s]
   #?(:clj  (let [m (re-matcher re s)]
              (if (.find m)
