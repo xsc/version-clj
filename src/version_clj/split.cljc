@@ -1,7 +1,7 @@
 (ns ^:no-doc version-clj.split
-  (:require [version-clj.normalize :as normalize]
-            [version-clj.qualifiers :refer [default-qualifiers]]
-            [clojure.string :as string]))
+  (:require [clojure.string :as string]
+            [version-clj.normalize :as normalize]
+            [version-clj.qualifiers :refer [default-qualifiers]]))
 
 ;; ## Desired Results
 ;;
@@ -21,19 +21,7 @@
 (defn- split-once
   "Helper to split exactly once on the given regex."
   [re s]
-  #?(:clj  (let [m (re-matcher re s)]
-             (if (.find m)
-               (let [idx (.start m)
-                     len (- (.end m) idx)]
-                 [(subs s 0 idx)
-                  (subs s (+ idx len))])
-               [s]))
-     :cljs (if-let [parts (.exec re s)]
-             (let [idx (.-index parts)
-                   len (count (aget ^array parts 0))]
-               [(subs s 0 idx)
-                (subs s (+ idx len))])
-             [s])))
+  (string/split s re 2))
 
 (defn- split-all
   "Helper to recursively apply split points."
