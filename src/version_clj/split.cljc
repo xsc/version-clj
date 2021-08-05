@@ -74,6 +74,10 @@
   "Split at the dash, if followed by a letter or only numbers."
   #"(?i)-(?=[^\d]|\d+$)")
 
+(def ^:const SPLIT-PREFIX
+  "Split a given string into char-only prefix and rest parts."
+  #"(?<=^\D+)(?=\d)")
+
 ;; ## Splitting Algorithm
 
 ;; ### Splitting a plain version
@@ -87,7 +91,7 @@
 (defn- split-version
   "Split a version that has already been separated from its qualifier."
   [version]
-  (split-all [SPLIT-DOT SPLIT-DASH SPLIT-COMPOUND] version))
+  (split-all [SPLIT-PREFIX SPLIT-DOT SPLIT-DASH SPLIT-COMPOUND] version))
 
 ;; ### Splitting a plain qualifier
 ;;
