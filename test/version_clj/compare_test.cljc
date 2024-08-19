@@ -30,6 +30,8 @@
        "1.0.0-beta"     "1.0.0-alpha"     1
        "1.0.0-alpaca"   "1.0.0-beta"     -1
        "1.0.0-final"    "1.0.0-milestone" 1
+       "1.0.0-snapshot" "1.0.0-release"  -1
+       "1.0.0-release"  "1.0.0-snapshot"  1
 
        ;; Qualifier/Numeric Comparison
        "1.0.0-alpha1"   "1.0.0-alpha2"   -1
