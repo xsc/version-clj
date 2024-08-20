@@ -1,4 +1,4 @@
-(defproject version-clj "2.0.3"
+(defproject version-clj "2.0.4-SNAPSHOT"
   :description "Version Analysis and Comparison for Clojure"
   :url "https://github.com/xsc/version-clj"
   :license {:name "MIT"
